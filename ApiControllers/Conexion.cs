@@ -1,24 +1,24 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using System.Data;
-
+using MongoDB.Driver;
 [ApiController]
 [Route("conexion")]
 public class Conexion : Controller {
     [HttpGet("sql")]
     public IActionResult ListarCarrerasSql(){
-        List<CarrerasSQL> lista = new List<CarreraSQL>();
+        List<CarreraSQL> lista = new List<CarreraSQL>();
 
-        SqlConnection conn = new SqlConnection(CadenasConecxion.SQL_SERVER);
+        SqlConnection conn = new SqlConnection(CadenasConexion.SQL_SERVER);
         SqlCommand cmd = new SqlCommand("select IdCarrera, Carrera from Carreras");
         cmd.Connection = conn;
         cmd.CommandType = System.Data.CommandType.Text;
         cmd.Connection.Open();
 
-        sqlDataReader = cmd.ExecuteReader();
+        SqlDataReader reader = cmd.ExecuteReader();
 
         while (reader.Read()) {
-            CarreraSQL carreera = new CarreraSQL();
+            CarreraSQL carrera = new CarreraSQL();
             carrera.IdCarrera = reader.GetInt16("IdCarrera");
             carrera.Carrera = reader.GetString("Carrera");
 
@@ -33,6 +33,12 @@ public class Conexion : Controller {
 
     [HttpGet("mongo")]
     public IActionResult ListarSalonesMongoDb(){
-        return Ok("Me estoy conectando a MongoDb");
+       MongoClient client = new MongoClient(CadenasConexion.MONGO_DB);
+       var db = client.GetDatabase("Practica2_Ivan");
+       var collection = db.GetCollection<SalonMongo>("Salones");
+
+       var lista = collection.Find(FilterDefinition<SalonMongo>.Empty).ToList();
+
+       return Ok(lista);
     }
 }
